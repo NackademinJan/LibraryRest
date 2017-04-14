@@ -1,0 +1,85 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package se.nackademin.rest.test;
+
+import static com.jayway.restassured.RestAssured.delete;
+import static com.jayway.restassured.RestAssured.given;
+import com.jayway.restassured.http.ContentType;
+import com.jayway.restassured.response.Response;
+import java.util.Random;
+import java.util.UUID;
+
+/**
+ *
+ * @author testautomatisering
+ */
+public class AuthorOperations {
+    private static final String BASE_URL = "http://localhost:8080/librarytest/rest/";
+    private String jsonString = "";
+    
+    
+    public Response getAllAuthors(){
+        String resourceName = "authors";
+        Response getResponse = given().accept(ContentType.JSON).get(BASE_URL + resourceName).prettyPeek();
+        return getResponse;
+    }
+    public Response getAuthor(int id){
+        String resourceName = "authors/"+id;
+        Response response = given().accept(ContentType.JSON).get(BASE_URL+resourceName);
+        return response;
+    }
+   
+    
+    
+    public Response createRandomAuthor(){
+        String resourceName = "authors";
+        String name = UUID.randomUUID().toString();
+        
+        
+        String postBodyTemplate = 
+                        "{\n" 
+                    +   "\"author\":\n" 
+                    +   "  {\n" 
+                    +   "    \"name\":\"%s\",\n" 
+                    +   "  }\n" 
+                    +   "}";
+        String postBody= String.format(postBodyTemplate, name);
+        jsonString = postBody;
+        Response postResponse = given().contentType(ContentType.JSON).body(postBody).post(BASE_URL + resourceName);
+        return postResponse;
+    }
+    
+    public Response createRandomAuthorWithRandomId(){
+        String resourceName = "authors";
+        String name = UUID.randomUUID().toString();
+        //id blir en slumpvald siffra mellan 500 och 1000 som författarens nya id, borde inte ge problem om man inte har mer än 500 författare i databasen
+        Integer id = (int)(Math.random() * ((1000 - 500)- 1));
+        
+        String postBodyTemplate = 
+                        "{\n" 
+                    +   "\"author\":\n" 
+                    +   "  {\n" 
+                    +   "    \"name\":\"%s\",\n" 
+                    +   "    \"id\":%s\n" 
+                    +   "  }\n" 
+                    +   "}";
+        String postBody= String.format(postBodyTemplate, name, id);
+        jsonString = postBody;
+        Response postResponse = given().contentType(ContentType.JSON).body(postBody).post(BASE_URL + resourceName);
+        return postResponse;
+    }
+    
+    public String getLatestJsonString(){
+        return jsonString;
+    }
+
+    public Response deleteAuthor(int id){
+        String deleteResourceName = "authors/"+id;
+        
+        Response deleteResponse = delete(BASE_URL + deleteResourceName);
+        return deleteResponse;
+    }
+}
