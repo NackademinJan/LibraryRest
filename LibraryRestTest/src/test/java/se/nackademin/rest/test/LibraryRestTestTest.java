@@ -27,44 +27,125 @@ public class LibraryRestTestTest {
     
     @Test
     public void testFetchBook(){
-        Book book = given().accept(ContentType.JSON).get(BASE_URL+"books/3").jsonPath().getObject("book", Book.class);
+        Book book = given().accept(ContentType.JSON).get(BASE_URL+"books/148").jsonPath().getObject("book", Book.class);
         
-        assertEquals("book id should be 3", "3", book.getId().toString());
+        assertEquals("book id should be 3", "148", book.getId().toString());
         System.out.println(book.getDescription());
+        System.out.println(book.getTitle());
         System.out.println(book.getAuthor());
         
     }
+
     @Test
-    public void testGetBook(){
-        Response response = new BookOperations().getBook(3);
+    public void testGetAllBooks(){
+        Response response = new BookOperations().getAllBooks();
         System.out.println("Status code: " + response.statusCode());
         
-        assertEquals("status code should be 200",  200, response.statusCode());
+        assertEquals("The status code should be: 200",  200, response.statusCode());
         
-        String title = response.body().jsonPath().getString("book.title");
-        System.out.println("Title: " + title);
     }
+    
+    @Test
+    public void testGetBookById(){
+        Response response = new BookOperations().getBookById(148);
+        System.out.println("Status code: " + response.statusCode());
+        assertEquals("The status code should be: 200",  200, response.statusCode());
+        
+        assertEquals("Book title should be: Testbok för testförfattaren",  "Testbok för testförfattaren", response.body().jsonPath().getString("book.title"));
+    }
+    
+    @Test
+    public void testInvalidGetBookByIdReturns404(){
+        Response response = new BookOperations().getBookById(234987);
+        System.out.println("Status code: " + response.statusCode());
+        assertEquals("status code returned should be: 404",  404, response.statusCode());
+        
+    }
+
+    @Test
+    public void testGetBookByAuthor(){
+        Response response = new BookOperations().getBookByAuthor(42);
+        
+        assertEquals("The status code should be: 200",  200, response.statusCode());
+        
+        assertEquals("Book title should be: Testbok för testförfattaren",  "Testbok för testförfattaren", response.body().jsonPath().getString("books.book.title")); 
+    }
+    
+    /*
+     *  detta test kommer inte ge rätt utslag då rest-api returnerar 200 när dett test körs, 
+     *  api dokumentationen specifierar inte heller att man ska kunna få fel på detta vis, 
+     *  men det verkar som ett misstag så behåller detta test utkommenterat utifall att.
+     */
+    //@Test
+    public void testInvalidGetBookbyAuthorReturns404(){
+        Response response = new BookOperations().getBookByAuthor(234987);
+        assertEquals("The status code should be: 404",  404, response.statusCode());
+        
+    }
+        
+    @Test
+    public void testGetAuthorByBook(){
+        Response response = new BookOperations().getAuthorByBook(148);
+        
+        assertEquals("The status code should be: 200",  200, response.statusCode());
+        
+        assertEquals("Author name should be Testförfattare RaderaEj",  "Testförfattare RaderaEj", response.body().jsonPath().getString("authors.author.name"));
+        String authorName = response.body().jsonPath().getString("authors.author.name");
+        System.out.println("The author name: " + authorName);
+    }
+    
     
     @Test
     public void testCreateNewBook(){
         Book book = new Book();
         book.setDescription("Hello");
-        book.setTitle("happy");
+        book.setTitle("Happy");
         book.setIsbn("123123");
         book.setNbOfPage(2356);
         SingleBook singleBook = new SingleBook(book);
         
         Response response = given().contentType(ContentType.JSON).body(singleBook).log().all().post(BASE_URL+"books").prettyPeek();
-        assertEquals("status code should be 201",  201, response.statusCode());
+        assertEquals("The status code should be: 201",  201, response.statusCode());
+        
+        Book verifyBook = new BookOperations().fetchLastBook();
+        assertEquals("The books description should be: Hello",  book.getDescription(), verifyBook.getDescription());       
+        assertEquals("The books title should be: Happy",  book.getTitle(), verifyBook.getTitle());       
+        assertEquals("The books isbn should be: 123123",  book.getIsbn(), verifyBook.getIsbn());       
+        assertEquals("The books page count should be: 2356",  book.getNbOfPage(), verifyBook.getNbOfPage());       
         
         Response deleteResponse = new BookOperations().deleteLastBook();
-        assertEquals("status code should be 204",  204, deleteResponse.statusCode());       
-          
+        assertEquals("The status code should be: 204",  204, deleteResponse.statusCode());
+    }
+       
+    @Test
+    public void testDeleteBook(){
+        Response postResponse = new BookOperations().createRandomBook();
+        assertEquals("The status code should be: 201",  201, postResponse.statusCode());
+        
+        Response getResponse = new BookOperations().getAllBooks();
+        int fetchedId = getResponse.jsonPath().getInt("books.book[-1].id");
+        
+        Response deleteResponse = new BookOperations().deleteBook(fetchedId);
+        assertEquals("delete method should return status code: 204", 204, deleteResponse.getStatusCode());
+        
+        Response getDeletedBookResponse = new BookOperations().getBookById(fetchedId);
+        assertEquals("fetching deleted book should return status code: 404",  404, getDeletedBookResponse.statusCode());
+        
     }
     
     @Test
+    public void testmakeauthor(){
+        Response response = new AuthorOperations().createAuthor("Andratestförfattare SkaRaderasAutomatiskt", 44);
+        assertEquals("The status code should be: 201",  201, response.statusCode());
+        
+        Response deleteResponse = new AuthorOperations().deleteLastAuthor();
+        assertEquals("The status code should be: 204",  204, deleteResponse.statusCode());  
+    }   
+    
+    /*
+    //@Test
     public void testCreateNewBookWithAuthor(){
-        Book Authorfetch = given().accept(ContentType.JSON).get(BASE_URL+"books/9").jsonPath().getObject("book", Book.class);
+        Book Authorfetch = given().accept(ContentType.JSON).get(BASE_URL+"books/1").jsonPath().getObject("book", Book.class);
         Book book = new Book();
         book.setDescription("Hello");
         book.setTitle("happy");
@@ -74,21 +155,22 @@ public class LibraryRestTestTest {
         
         SingleBook singleBook = new SingleBook(book);
         Response response = given().contentType(ContentType.JSON).body(singleBook).log().all().post(BASE_URL+"books").prettyPeek();
+        assertEquals("status code should be 201",  201, response.statusCode());
         System.out.println("Status code: " + response.getStatusCode());  
         
         //Response deleteResponse = new BookOperations().deleteLastBook();
         //assertEquals("status code should be 204",  204, deleteResponse.statusCode());      
     }
     
-   // @Test
+    //@Test
     public void testAddNewBookWithAuthor(){
         BookOperations bookOperations = new BookOperations();
         AuthorOperations authorOperations = new AuthorOperations();
         
-        Response postAuthorResponse = authorOperations.createRandomAuthorWithRandomId();
+        //Response postAuthorResponse = authorOperations.createRandomAuthorWithRandomId();
         // assertEquals("status code should be 201",  201, postAuthorResponse.statusCode());
         String authorTitle = "Margaret Atwood"; //from(authorOperations.getLatestJsonString()).getString("author.name");
-        Integer authorId = 22;//from(authorOperations.getLatestJsonString()).getInt("author.id");
+        Integer authorId = 1.0;//from(authorOperations.getLatestJsonString()).getInt("author.id");
         
         Response postResponse = bookOperations.createRandomBookWithAuthor(authorTitle, authorId);
         assertEquals("status code should be 201",  201, postResponse.statusCode());
@@ -110,13 +192,6 @@ public class LibraryRestTestTest {
         
     }
     /*
-    @Test
-    public void testFetchInvalidBookReturns404(){
-        Response response = new BookOperations().getBook(234987);
-        System.out.println("Status code: " + response.statusCode());
-        assertEquals("status code should be 404",  404, response.statusCode());
-        
-    }
     
     @Test
     public void testAddNewBook(){
@@ -141,20 +216,10 @@ public class LibraryRestTestTest {
         
     }
     */
-    @Test
-    public void testDeleteBook(){
-        Response postResponse = new BookOperations().createRandomBook();
-        assertEquals("status code should be 201",  201, postResponse.statusCode());
-        
-        Response getResponse = new BookOperations().getAllBooks();
-        int fetchedId = getResponse.jsonPath().getInt("books.book[-1].id");
-        
-        Response deleteResponse = new BookOperations().deleteBook(fetchedId);
-        assertEquals("delete method should return 204", 204, deleteResponse.getStatusCode());
-        
-        Response getDeletedBookResponse = new BookOperations().getBook(fetchedId);
-        assertEquals("fetching deleted book should return 404",  404, getDeletedBookResponse.statusCode());
-        
-    }
+    /*       //String title = response.body().jsonPath().getString("books.book.title");
+        String title = response.body().jsonPath().getString("books.book.title");
+        String authorName = response.body().jsonPath().getString("books.book.author.name");
+        System.out.println("The author name: " + authorName);
+    */
     
 }

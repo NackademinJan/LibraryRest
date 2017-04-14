@@ -11,6 +11,7 @@ import com.jayway.restassured.http.ContentType;
 import com.jayway.restassured.response.Response;
 import java.util.Random;
 import java.util.UUID;
+import se.nackademin.rest.test.model.Book;
 
 /**
  *
@@ -26,7 +27,7 @@ public class BookOperations {
         Response getResponse = given().accept(ContentType.JSON).get(BASE_URL + resourceName).prettyPeek();
         return getResponse;
     }
-    public Response getBook(int id){
+    public Response getBookById(int id){
         String resourceName = "books/"+id;
         Response response = given().accept(ContentType.JSON).get(BASE_URL+resourceName);
         return response;
@@ -76,15 +77,15 @@ public class BookOperations {
                         "{\n" 
                     +   "\"book\":\n" 
                     +   "  {\n" 
-                    +   "    \"description\":\"%s\",\n" 
-                    +   "    \"isbn\":\"%s\",\n" 
-                    +   "    \"nbOfPage\":\"%s\",\n"
-                    +   "    \"title\":\"%s\"\n" 
                     +   "    \"author\":\n" 
                     +   "    {\n" 
                     +   "      \"name\":\"%s\",\n" 
                     +   "      \"id\":%s\n" 
                     +   "    }\n" 
+                    +   "    \"description\":\"%s\",\n" 
+                    +   "    \"isbn\":\"%s\",\n" 
+                    +   "    \"nbOfPage\":\"%s\",\n"
+                    +   "    \"title\":\"%s\"\n" 
                     +   "  }\n" 
                     +   "}";
                 
@@ -99,10 +100,20 @@ public class BookOperations {
         return jsonString;
     }
     
-    public Response deleteLastBook(){
-        
-        
-        
+    public Book fetchLastBook(){
+        Response getResponse = new BookOperations().getAllBooks();
+        int fetchedId = getResponse.jsonPath().getInt("books.book[-1].id");
+        Book fetchBook = given().accept(ContentType.JSON).get(BASE_URL+"books/"+fetchedId).jsonPath().getObject("book", Book.class);
+        return  fetchBook;
+    }
+    
+    public Response GetLastBook(){
+        Response getResponse = new BookOperations().getAllBooks();
+        int fetchedId = getResponse.jsonPath().getInt("books.book[-1].id");
+        Response fetchResponse = new BookOperations().getBookById(fetchedId);
+        return  fetchResponse;
+    }
+    public Response deleteLastBook(){   
         Response getResponse = new BookOperations().getAllBooks();
         int fetchedId = getResponse.jsonPath().getInt("books.book[-1].id");
         Response deleteResponse = new BookOperations().deleteBook(fetchedId);

@@ -32,7 +32,24 @@ public class AuthorOperations {
         return response;
     }
    
-    
+    public Response createAuthor(String name, Integer id){
+        String resourceName = "authors";
+        
+        
+        
+        String postBodyTemplate = 
+                        "{\n" 
+                    +   "\"author\":\n" 
+                    +   "  {\n" 
+                    +   "    \"name\":\"%s\",\n" 
+                    +   "    \"id\":%s\n"
+                    +   "  }\n" 
+                    +   "}";
+        String postBody= String.format(postBodyTemplate, name, id);
+        jsonString = postBody;
+        Response postResponse = given().contentType(ContentType.JSON).body(postBody).post(BASE_URL + resourceName);
+        return postResponse;
+    }
     
     public Response createRandomAuthor(){
         String resourceName = "authors";
@@ -75,7 +92,14 @@ public class AuthorOperations {
     public String getLatestJsonString(){
         return jsonString;
     }
-
+     
+    public Response deleteLastAuthor(){   
+        Response getResponse = new AuthorOperations().getAllAuthors();
+        int fetchedId = getResponse.jsonPath().getInt("authors.author[-1].id");
+        Response deleteResponse = new AuthorOperations().deleteAuthor(fetchedId);
+        return deleteResponse;
+    }
+    
     public Response deleteAuthor(int id){
         String deleteResourceName = "authors/"+id;
         
