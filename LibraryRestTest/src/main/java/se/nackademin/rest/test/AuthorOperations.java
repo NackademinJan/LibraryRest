@@ -17,22 +17,41 @@ import java.util.UUID;
  * @author testautomatisering
  */
 public class AuthorOperations {
-    private static final String BASE_URL = "http://localhost:8080/librarytest/rest/";
     private String jsonString = "";
     
     
     public Response getAllAuthors(){
         String resourceName = "authors";
-        Response getResponse = given().accept(ContentType.JSON).get(BASE_URL + resourceName).prettyPeek();
+        Response getResponse = given().accept(ContentType.JSON).get(GlobVar.BASE_URL + resourceName);
         return getResponse;
     }
     public Response getAuthor(int id){
         String resourceName = "authors/"+id;
-        Response response = given().accept(ContentType.JSON).get(BASE_URL+resourceName);
+        Response response = given().accept(ContentType.JSON).get(GlobVar.BASE_URL+resourceName);
         return response;
     }
    
-    public Response createAuthor(String name, Integer id){
+    public Response createAuthor(String name){
+        String resourceName = "authors";
+        
+        
+        
+        String postBodyTemplate = 
+                        "{\n" 
+                    +   "\"author\":\n" 
+                    +   "  {\n" 
+                    +   "    \"name\":\"%s\",\n" 
+                    +   "  }\n" 
+                    +   "}";
+        String postBody= String.format(postBodyTemplate, name);
+        jsonString = postBody;
+        Response postResponse = given().contentType(ContentType.JSON).body(postBody).post(GlobVar.BASE_URL + resourceName);
+        return postResponse;
+    }
+    
+    
+    
+    public Response createAuthorWithId(String name, Integer id){
         String resourceName = "authors";
         
         
@@ -47,7 +66,7 @@ public class AuthorOperations {
                     +   "}";
         String postBody= String.format(postBodyTemplate, name, id);
         jsonString = postBody;
-        Response postResponse = given().contentType(ContentType.JSON).body(postBody).post(BASE_URL + resourceName);
+        Response postResponse = given().contentType(ContentType.JSON).body(postBody).post(GlobVar.BASE_URL + resourceName);
         return postResponse;
     }
     
@@ -65,7 +84,7 @@ public class AuthorOperations {
                     +   "}";
         String postBody= String.format(postBodyTemplate, name);
         jsonString = postBody;
-        Response postResponse = given().contentType(ContentType.JSON).body(postBody).post(BASE_URL + resourceName);
+        Response postResponse = given().contentType(ContentType.JSON).body(postBody).post(GlobVar.BASE_URL + resourceName);
         return postResponse;
     }
     
@@ -85,7 +104,7 @@ public class AuthorOperations {
                     +   "}";
         String postBody= String.format(postBodyTemplate, name, id);
         jsonString = postBody;
-        Response postResponse = given().contentType(ContentType.JSON).body(postBody).post(BASE_URL + resourceName);
+        Response postResponse = given().contentType(ContentType.JSON).body(postBody).post(GlobVar.BASE_URL + resourceName);
         return postResponse;
     }
     
@@ -103,7 +122,7 @@ public class AuthorOperations {
     public Response deleteAuthor(int id){
         String deleteResourceName = "authors/"+id;
         
-        Response deleteResponse = delete(BASE_URL + deleteResourceName);
+        Response deleteResponse = delete(GlobVar.BASE_URL + deleteResourceName);
         return deleteResponse;
     }
 }

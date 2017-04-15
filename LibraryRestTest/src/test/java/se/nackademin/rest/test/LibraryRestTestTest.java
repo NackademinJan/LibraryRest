@@ -14,85 +14,36 @@ import static org.junit.Assert.*;
 import static com.jayway.restassured.path.json.JsonPath.*;
 import se.nackademin.rest.test.model.Book;
 import static com.jayway.restassured.RestAssured.*;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import se.nackademin.rest.test.model.AllBooks;
 import se.nackademin.rest.test.model.SingleBook;
 /**
  *
  * @author testautomatisering
  */
 public class LibraryRestTestTest {
-    private static final String BASE_URL = "http://localhost:8080/librarytest/rest/";
+
     
     public LibraryRestTestTest() {
     }
-    
-    @Test
-    public void testFetchBook(){
-        Book book = given().accept(ContentType.JSON).get(BASE_URL+"books/148").jsonPath().getObject("book", Book.class);
         
-        assertEquals("book id should be 3", "148", book.getId().toString());
-        System.out.println(book.getDescription());
-        System.out.println(book.getTitle());
-        System.out.println(book.getAuthor());
+    @BeforeClass
+    public static void MakeMockBookAndMockAuthor(){
+        Response makeMocksResponse = BeforeAndAfterOperations.MakeMockBookAndMockAuthor();
+        assertEquals("The status code should be: 201",  201, makeMocksResponse.statusCode());
         
-    }
-
-    @Test
-    public void testGetAllBooks(){
-        Response response = new BookOperations().getAllBooks();
-        System.out.println("Status code: " + response.statusCode());
-        
-        assertEquals("The status code should be: 200",  200, response.statusCode());
-        
+        Response addMockAuthorToMockBook = BeforeAndAfterOperations.AddMockAuthorToMockBook();
+        assertEquals("The status code should be: 200",  200, addMockAuthorToMockBook.statusCode());
     }
     
-    @Test
-    public void testGetBookById(){
-        Response response = new BookOperations().getBookById(148);
-        System.out.println("Status code: " + response.statusCode());
-        assertEquals("The status code should be: 200",  200, response.statusCode());
-        
-        assertEquals("Book title should be: Testbok för testförfattaren",  "Testbok för testförfattaren", response.body().jsonPath().getString("book.title"));
+    @AfterClass
+    public static void RemoveMockBookAndMockAuthor(){
+        Response removeResponse = BeforeAndAfterOperations.RemoveTestBookAndTestAuthor();
+        assertEquals("The status code should be: 204",  204, removeResponse.statusCode());  
     }
     
-    @Test
-    public void testInvalidGetBookByIdReturns404(){
-        Response response = new BookOperations().getBookById(234987);
-        System.out.println("Status code: " + response.statusCode());
-        assertEquals("status code returned should be: 404",  404, response.statusCode());
-        
-    }
-
-    @Test
-    public void testGetBookByAuthor(){
-        Response response = new BookOperations().getBookByAuthor(42);
-        
-        assertEquals("The status code should be: 200",  200, response.statusCode());
-        
-        assertEquals("Book title should be: Testbok för testförfattaren",  "Testbok för testförfattaren", response.body().jsonPath().getString("books.book.title")); 
-    }
-    
-    /*
-     *  detta test kommer inte ge rätt utslag då rest-api returnerar 200 när dett test körs, 
-     *  api dokumentationen specifierar inte heller att man ska kunna få fel på detta vis, 
-     *  men det verkar som ett misstag så behåller detta test utkommenterat utifall att.
-     */
-    //@Test
-    public void testInvalidGetBookbyAuthorReturns404(){
-        Response response = new BookOperations().getBookByAuthor(234987);
-        assertEquals("The status code should be: 404",  404, response.statusCode());
-        
-    }
-        
-    @Test
-    public void testGetAuthorByBook(){
-        Response response = new BookOperations().getAuthorByBook(148);
-        
-        assertEquals("The status code should be: 200",  200, response.statusCode());
-        
-        assertEquals("Author name should be Testförfattare RaderaEj",  "Testförfattare RaderaEj", response.body().jsonPath().getString("authors.author.name"));
-        String authorName = response.body().jsonPath().getString("authors.author.name");
-        System.out.println("The author name: " + authorName);
-    }
     
     
     @Test
@@ -104,7 +55,7 @@ public class LibraryRestTestTest {
         book.setNbOfPage(2356);
         SingleBook singleBook = new SingleBook(book);
         
-        Response response = given().contentType(ContentType.JSON).body(singleBook).log().all().post(BASE_URL+"books").prettyPeek();
+        Response response = given().contentType(ContentType.JSON).body(singleBook).log().all().post(GlobVar.BASE_URL+"books").prettyPeek();
         assertEquals("The status code should be: 201",  201, response.statusCode());
         
         Book verifyBook = new BookOperations().fetchLastBook();
@@ -135,7 +86,7 @@ public class LibraryRestTestTest {
     
     @Test
     public void testmakeauthor(){
-        Response response = new AuthorOperations().createAuthor("Andratestförfattare SkaRaderasAutomatiskt", 44);
+        Response response = new AuthorOperations().createAuthor("MockTestFörfattare SkaRaderasAutomatiskt");
         assertEquals("The status code should be: 201",  201, response.statusCode());
         
         Response deleteResponse = new AuthorOperations().deleteLastAuthor();
@@ -145,7 +96,7 @@ public class LibraryRestTestTest {
     /*
     //@Test
     public void testCreateNewBookWithAuthor(){
-        Book Authorfetch = given().accept(ContentType.JSON).get(BASE_URL+"books/1").jsonPath().getObject("book", Book.class);
+        Book Authorfetch = given().accept(ContentType.JSON).get(GlobVar.BASE_URL+"books/1").jsonPath().getObject("book", Book.class);
         Book book = new Book();
         book.setDescription("Hello");
         book.setTitle("happy");
@@ -154,7 +105,7 @@ public class LibraryRestTestTest {
         book.setAuthor(Authorfetch.getAuthor());
         
         SingleBook singleBook = new SingleBook(book);
-        Response response = given().contentType(ContentType.JSON).body(singleBook).log().all().post(BASE_URL+"books").prettyPeek();
+        Response response = given().contentType(ContentType.JSON).body(singleBook).log().all().post(GlobVar.BASE_URL+"books").prettyPeek();
         assertEquals("status code should be 201",  201, response.statusCode());
         System.out.println("Status code: " + response.getStatusCode());  
         
@@ -221,5 +172,8 @@ public class LibraryRestTestTest {
         String authorName = response.body().jsonPath().getString("books.book.author.name");
         System.out.println("The author name: " + authorName);
     */
+    
+
+
     
 }
