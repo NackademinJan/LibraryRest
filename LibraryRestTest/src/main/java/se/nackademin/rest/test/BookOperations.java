@@ -62,6 +62,22 @@ public class BookOperations {
         return postResponse;
     }
     
+    public Response addAuthorToBookWithoutAuthorId(String authorName, Integer bookId){
+        String resourceName = "books/"+bookId+"/authors";
+         
+        String postBodyTemplate = 
+                        "{\n" 
+                    +   "\"author\":\n" 
+                    +   "  {\n" 
+                    +   "    \"name\":\"%s\",\n" 
+                    +   "  }\n" 
+                    +   "}";
+        String postBody= String.format(postBodyTemplate, authorName);
+        jsonString = postBody;
+        Response postResponse = given().contentType(ContentType.JSON).body(postBody).post(GlobVar.BASE_URL + resourceName);
+        return postResponse;
+    }
+    //This class is createBookWithInput using the Book.java class, need to make a author.java class to help handle author objects
     public Response makeBookWithInput(String description, String isbn, Integer nbOfPage, String title){
         Book book = new Book();
         book.setDescription(description);
@@ -90,11 +106,65 @@ public class BookOperations {
         return postResponse;
     }
     
+    //author must have been created prior to running this method)
+    public Response createBookWithAuthor(String description, String isbn, Integer nbOfPage, String title, String authorName, Integer authorId){
+        String resourceName = "books";
+        
+        
+        String postBodyTemplate = 
+                        "{\n" 
+                    +   "\"book\":\n" 
+                    +   "  {\n" 
+                    +   "    \"description\":\"%s\",\n" 
+                    +   "    \"isbn\":\"%s\",\n" 
+                    +   "    \"nbOfPage\":\"%s\",\n"
+                    +   "    \"title\":\"%s\"\n" 
+                    +   "    \"author\":\n" 
+                    +   "    {\n" 
+                    +   "      \"name\":\"%s\",\n" 
+                    +   "      \"id\":%s\n" 
+                    +   "    }\n" 
+                    +   "  }\n" 
+                    +   "}";
+                
+        String postBody= String.format(postBodyTemplate, description, isbn, nbOfPage, title, authorName, authorId);
+        jsonString = postBody;
+        Response postResponse = given().contentType(ContentType.JSON).body(postBody).post(GlobVar.BASE_URL + resourceName);
+        return postResponse;        
+    }
+    
+    // this method should always produce a response with statuscode 400, it should not successfully posta book
+    public Response createBookWithAuthorNoAuthorId(String description, String isbn, Integer nbOfPage, String title, String authorName){
+        String resourceName = "books";
+        
+        
+        String postBodyTemplate = 
+                        "{\n" 
+                    +   "\"book\":\n" 
+                    +   "  {\n" 
+                    +   "    \"description\":\"%s\",\n" 
+                    +   "    \"isbn\":\"%s\",\n" 
+                    +   "    \"nbOfPage\":\"%s\",\n"
+                    +   "    \"title\":\"%s\"\n" 
+                    +   "    \"author\":\n" 
+                    +   "    {\n" 
+                    +   "      \"name\":\"%s\",\n" 
+                    +   "    }\n" 
+                    +   "  }\n" 
+                    +   "}";
+                
+        String postBody= String.format(postBodyTemplate, description, isbn, nbOfPage, title, authorName);
+        jsonString = postBody;
+        Response postResponse = given().contentType(ContentType.JSON).body(postBody).post(GlobVar.BASE_URL + resourceName);
+        return postResponse;        
+    }
+    
     public Response createRandomBook(){
         String resourceName = "books";
         String title = UUID.randomUUID().toString();
         String description = UUID.randomUUID().toString();
         String isbn = UUID.randomUUID().toString();
+        Integer nbOfPage = new Random().nextInt(500);
         
         String postBodyTemplate = 
                         "{\n" 
@@ -106,12 +176,12 @@ public class BookOperations {
                     +   "    \"title\":\"%s\"\n" 
                     +   "  }\n" 
                     +   "}";
-        String postBody= String.format(postBodyTemplate, description, isbn, new Random().nextInt(500), title);
+        String postBody= String.format(postBodyTemplate, description, isbn, nbOfPage, title);
         jsonString = postBody;
         Response postResponse = given().contentType(ContentType.JSON).body(postBody).post(GlobVar.BASE_URL + resourceName);
         return postResponse;
     }
-    
+    //the below method will not work due to the api not supporting creating  a book with an author and author id regardless if they exist already or not in defiance of documentation
     public Response createRandomBookWithAuthor(String authorName, Integer authorId){
         String resourceName = "books";
         String title = UUID.randomUUID().toString();
@@ -149,22 +219,22 @@ public class BookOperations {
     
     public Book fetchLastBook(){
         Response getResponse = new BookOperations().getAllBooks();
-        int fetchedId = getResponse.jsonPath().getInt("books.book[-1].id");
-        Book fetchBook = given().accept(ContentType.JSON).get(GlobVar.BASE_URL+"books/"+fetchedId).jsonPath().getObject("book", Book.class);
+        int fetchlastBookId = getResponse.jsonPath().getInt("books.book[-1].id");
+        Book fetchBook = given().accept(ContentType.JSON).get(GlobVar.BASE_URL+"books/"+fetchlastBookId).jsonPath().getObject("book", Book.class);
         return  fetchBook;
     }
     
     public Response GetLastBook(){
         Response getResponse = new BookOperations().getAllBooks();
-        int fetchedId = getResponse.jsonPath().getInt("books.book[-1].id");
-        Response fetchResponse = new BookOperations().getBookById(fetchedId);
-        return  fetchResponse;
+        int lastBookId = getResponse.jsonPath().getInt("books.book[-1].id");
+        Response lastBookResponse = new BookOperations().getBookById(lastBookId);
+        return  lastBookResponse;
     }
     public Response deleteLastBook(){   
         Response getResponse = new BookOperations().getAllBooks();
-        int fetchedId = getResponse.jsonPath().getInt("books.book[-1].id");
-        Response deleteResponse = new BookOperations().deleteBook(fetchedId);
-        return deleteResponse;
+        int deleteLastBookId = getResponse.jsonPath().getInt("books.book[-1].id");
+        Response deleteLastBookResponse = new BookOperations().deleteBook(deleteLastBookId);
+        return deleteLastBookResponse;
     }
     
     public Response deleteBook(int id){

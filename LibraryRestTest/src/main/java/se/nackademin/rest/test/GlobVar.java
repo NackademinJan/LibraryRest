@@ -13,4 +13,20 @@ public class GlobVar {
     public static final String BASE_URL = "http://localhost:8080/librarytest/rest/";
     public static Integer mockBookId;
     public static Integer mockAuthorId;
+    
+    public static String mockBookDescription = "MockyTestDescription";
+    public static String mockBookTitle = "MockyTestTitle";
+    public static String mockBookIsbn = "MockyIsbn";
+    public static Integer mockBookNbOfPage = 7357;
+    
+    public static String mockAuthorName = "MockyAuthorName";
+    
+    public static String secondMockBookDescription = "AnotherMockyTestDescription";
+    public static String secondMockBookTitle = "AnotherMockyTestDescription";
+    public static String secondMockBookIsbn = "AnotherMockyIsbn";
+    public static Integer secondMockBookNbOfPage = 123123;
+    
+    public static String secondMockAuthorName = "AnotherMockyAuthorName";
+    
+    
 }

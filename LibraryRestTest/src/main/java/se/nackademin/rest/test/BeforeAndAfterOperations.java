@@ -18,29 +18,30 @@ import se.nackademin.rest.test.model.SingleBook;
 public class BeforeAndAfterOperations {
 
     
-   public static Response MakeMockBookAndMockAuthor(){
-        Response postBookResponse = new BookOperations().createBookWithInput("MockyTestDescription", "MockyIsbn", 7357, "MockyTestTitle");
+    public static Response MakeMockBookAndMockAuthor(){
+        Response postBookResponse = new BookOperations().createBookWithInput(GlobVar.mockBookDescription, GlobVar.mockBookIsbn, GlobVar.mockBookNbOfPage, GlobVar.mockBookTitle);
         //if(!( 201 == postBookResponse.getStatusCode() )) return postBookResponse;
         Response lastBookResponse = new BookOperations().getAllBooks();
         GlobVar.mockBookId = lastBookResponse.jsonPath().getInt("books.book[-1].id");
         
-        Response postAuthorResponse = new AuthorOperations().createAuthor("MockyAuthorName");
+        Response postAuthorResponse = new AuthorOperations().createAuthor(GlobVar.mockAuthorName);
         //if(!( 201 == postAuthorResponse.getStatusCode() )) return postAuthorResponse;
         Response authorResponse = new AuthorOperations().getAllAuthors();
         GlobVar.mockAuthorId = authorResponse.jsonPath().getInt("authors.author[-1].id");
         return postAuthorResponse;
         
     } 
-   public static Response AddMockAuthorToMockBook(){
-        Response authorOfBookResponse = new BookOperations().addAuthorToBook("MockyAuthorName", GlobVar.mockAuthorId, GlobVar.mockBookId);  
+    public static Response AddMockAuthorToMockBook(){
+        Response authorOfBookResponse = new BookOperations().addAuthorToBook(GlobVar.mockAuthorName, GlobVar.mockAuthorId, GlobVar.mockBookId);  
         return authorOfBookResponse; 
-   }
+    }
    
-   public static Response RemoveTestBookAndTestAuthor(){
+    public static Response RemoveTestBookAndTestAuthor(){
         Response deleteBookResponse = new BookOperations().deleteBook(GlobVar.mockBookId);
         if(!( 204 == deleteBookResponse.getStatusCode() )) return deleteBookResponse;
         
         Response deleteAuthorResponse = new AuthorOperations().deleteAuthor(GlobVar.mockAuthorId);
         return deleteAuthorResponse;
     }
+    
 }
